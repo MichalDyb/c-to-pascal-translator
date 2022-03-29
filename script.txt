@@ -1,0 +1,1148 @@
+#!/usr/bin/awk -f
+
+#definicje funkcji
+function klucz(lancuch)
+{
+    x=0
+    if(match(lancuch,/^\ *char/) != 0) 
+    {
+        _keywordname="char"
+        x=1
+    }   
+    else if(match(lancuch,/^\ *short/) != 0) 
+    {
+        _keywordname="short"
+        x=2
+    }   
+    else if(match(lancuch,/^\ *int/) != 0) 
+    {
+        _keywordname="int"
+        x=3
+    } 
+    else if(match(lancuch,/^\ *long/) != 0) 
+    {
+        _keywordname="long"
+        x=4
+    }   
+    if(match(lancuch,/^\ *long\ +long/) != 0) 
+    {
+        _keywordname="long long"
+        x=5
+    } 
+    else if(match(lancuch,/^\ *float/) != 0) 
+    {
+        _keywordname="float"
+        x=6
+    }   
+    else if(match(lancuch,/^\ *double/) != 0) 
+    {
+        _keywordname="double"
+        x=7
+    }  
+    if(match(lancuch,/^\ *long\ +double/) != 0) 
+    {
+        _keywordname="long double"
+        x=8
+    }  
+    else if(match(lancuch,/^\ *bool/) != 0) 
+    {
+        _keywordname="bool"
+        x=9
+    }  
+    else if(match(lancuch,/^\ *void/) != 0) 
+    {
+        _keywordname="void"
+        x=10
+    } 
+    else if(match(lancuch,/^\ *struct/) != 0) 
+    {
+        _keywordname="struct"
+        x=11
+    } 
+    else if(match(lancuch,/^\ *const/) != 0) 
+    {
+        _keywordname="const"
+        x=12
+    } 
+    else if(match(lancuch,/^\ *\#define/) != 0) 
+    {
+        _keywordname="#define"
+        x=13
+    }
+    else if(match(lancuch,/^\ *\#include/) != 0) 
+    {
+        _keywordname="#include"
+        x=14
+    }  
+    if(match(lancuch,/^\ *int\ +main\ *\((\ *)|(\ *void)|(\ *int\ +argc\ *,\ *char\ +\*\ *argv\ *\[\ *\])\ *\)/) != 0) 
+    {
+        _keywordname="int main"
+        x=15
+    } 
+    else if(match(lancuch,/^\ *\if/) != 0) 
+    {
+        _keywordname="if"
+        x=16
+    }
+    else if(match(lancuch,/^\ *\else/) != 0) 
+    {
+        _keywordname="else"
+        x=17
+    }  
+    else if(match(lancuch,/^\ *\for/) != 0) 
+    {
+        _keywordname="for"
+        x=18
+    }  
+    else if(match(lancuch,/^\ *\while/) != 0) 
+    {
+        _keywordname="while"
+        x=19
+    } 
+    else if(match(lancuch,/^\ *\do/) != 0) 
+    {
+        _keywordname="do"
+        x=20
+    } 
+    else if(match(lancuch,/^\ *\switch/) != 0) 
+    {
+        _keywordname="switch"
+        x=21
+    } 
+    else if(match(lancuch,/^\ *\case/) != 0) 
+    {
+        _keywordname="case"
+        x=22
+    } 
+    else if(match(lancuch,/^\ *\return/) != 0) 
+    {
+        _keywordname="return"
+        x=23
+    } 
+    else if(match(lancuch,/^\ *\break/) != 0) 
+    {
+        _keywordname="break"
+        x=24
+    } 
+    else if(match(lancuch,/^\ *\continue/) != 0) 
+    {
+        _keywordname="continue"
+        x=25
+    }
+    else if(match(lancuch,/^\ *printf/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname="printf"
+        x=26
+    }  
+    else if(match(lancuch,/^\ *scanf/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname="scanf"
+        x=27
+    }        
+    else if(match(lancuch,/^\ *".*"|'.'/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=28
+    }   
+    else if(match(lancuch,/^\ *-?\ *[1-9]+\.?[0-9]*/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=29
+    }  
+    else if(match(lancuch,/^(\ *\+\+\ *)+[a-zA-Z_]+[a-zA-Z_0-9]*\ *;\ *$/) != 0 || match(lancuch,/^\ *[a-zA-Z_]+[a-zA-Z_0-9]*(\ *\+\+\ *)+;\ *$/) != 0)
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=31
+    } 
+else if(match(lancuch,/^(\ *--\ *)+[a-zA-Z_]+[a-zA-Z_0-9]*\ *;\ *$/) != 0 || match(lancuch,/^\ *[a-zA-Z_]+[a-zA-Z_0-9]*(\ *--\ *)+;\ *$/) != 0)
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=32
+    } 
+    else if(match(lancuch,/^\ *[a-zA-Z_]+[a-zA-Z_0-9]*/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=30
+    }   
+        else if(match(lancuch,/^\ *\{\ *$/) != 0) 
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=33
+    } 
+        else if(match(lancuch,/^\ *\}\ *$/) != 0)
+    {
+        if(x != 0) {return x}
+        _keywordname=lancuch
+        x=34
+    }  
+    if(x == 0) {_keywordname=""}
+    return x
+}
+
+function zamienzmienna(zmienna)
+{
+    x = klucz(zmienna)
+    if(x == 1)
+        return "Char"
+    if(x == 2)
+        return "SmallInt"
+    if(x == 3)
+        return "Integer"
+    if(x == 4)
+        return "LongInt"
+    if(x == 5)
+        return "Int64"
+    if(x == 6)
+        return "Single"
+    if(x == 7)
+        return "Double"
+    if(x == 8)
+        return "Extended"
+    if(x == 9)
+        return "Boolean"
+    return "error"
+}
+
+BEGIN {
+    #tworze zmienne przechowujace nazwy plikow
+    file_const="const.txt"
+    file_var="var.txt"
+    file_main="main.txt"
+    file_error="error.txt"
+    file_c=ARGV[1]
+    file_pascal=ARGV[2]
+    error_argument=0
+    
+    #sprawdzam czy podano prawidlowe nazwy pliku do tlumaczenia i pliku wyjsciowego
+    if(ARGV[1] == ARGV[2] || ARGV[1] == "" || ARGV[2] == "")
+    {
+        error_argument=1
+        exit
+    }
+    
+    #tworze zmienne pomocnicze do przetwarzania tekstu
+    _main=0
+    _line=0
+    _keyword=0
+    _keywordname=""
+    _string=""
+    _type=""
+    _name=""
+    _value=""
+    _curly_brackets=0
+    _inproc=0
+
+    #pobiera po kolei wiersze tekstu z pliku wejsciowego do zmiennej $0
+    while((getline < file_c) == 1) 
+    {
+        line++
+        #pomija przetwarzanie wierszy, jesli sa one puste
+        if(length($0) == 0) {continue}
+
+        #poszukuje słów kluczowych na początku lini
+        _keyword = klucz($0)
+        #print _keywordname
+        
+        #poszukuje instrukcji, które mogą być wykonane poza funkcją main
+        if(_main == 0 && _keyword < 16)
+        {
+            #poszukuje deklaracji funkcji glownej
+            if(_keyword == 15)
+            {
+                _main = 1 
+                continue
+            }
+
+            #poszukuje pozostałych, instrukcji które nie mogą być wykonane poza funkcją main
+            if(_keyword == 11 || _keyword == 14)
+            {
+                print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                print $0 > file_error
+                continue 
+            }
+
+            #sprawdza i tłumaczy inicjalizacje stalych
+            if(_keyword == 12)
+            {       
+                if(match($0,/^\ *const\ +/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0 > file_error
+                    continue
+                }
+                
+                _string = substr($0, match($0, "const") + length("const"))
+
+                if(klucz(_string) < 1 || klucz(_string) > 9)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                    print $0 > file_error
+                    continue
+                }
+
+                _string = substr($0, match($0, _keywordname) + length(_keywordname))
+
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(true)|(false)|(".*")|(-?\ *[1-9]+\.?[0-9]*)\ *;\ *$/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0 > file_error
+                    continue
+                }
+
+                gsub(";","", _string)
+                gsub(" ", "",  _string)
+                gsub("="," ", _string)
+                split(_string,_tab," ")
+                _name = _tab[1]
+                _value = _tab[2]
+
+                if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error
+                    continue
+                }
+
+                if(match(_value,/^\ *(true|false|".*"|'.'|-?[1-9]+\.?[0-9]*)\ *$/) == 0 || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartość." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                gsub("\"","'",_value)
+                print _name "= " _value ";" > file_const
+                continue
+            }
+
+            #sprawdza i tlumaczy instrukcje preprocesora #define
+            if(_keyword == 13)
+            {
+                if(split($0,_tab," ") != 3)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                    
+                if(_tab[1] != "#define")
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+                }    
+                if(klucz(_tab[2]) != 30 && length(_tab[2]) == length(_keywordname) && match(_tab[2],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                if(match(_tab[3],/^(-?\ *[1-9]+\.?[0-9]*)|(".*")|('.')$/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartosc." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                gsub("\"","'",_tab[3])
+                print _tab[2] "= " _tab[3] ";" > file_const
+                continue
+            }
+
+            #poszukuje deklaracji zmiennych, lub deklaracji z inicjalizacją
+            if(_keyword > 0 && _keyword < 10)
+            {
+                #zwraca łancuch tekstowy za slowem kluczowym
+                _string = substr($0,length(_keywordname) + 1)
+                
+                #sprawdza czy jest to deklaracja zmiennej, jeśli tak tlumaczy deklaracje i wypisuje do pliku var.txt
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *;\ *$/) != 0) 
+                {
+                    gsub(" ","",_string)
+                    gsub(";","",_string)
+                    _name = _string
+                    _type = zamienzmienna(_keywordname)
+                    if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(_type == "error")
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                        print $0  > file_error 
+                        continue
+                    }
+                    else 
+                    {
+                        print _name ":" _type ";" > file_var
+                    }
+                } 
+                #sprawdza czy jest to deklaracja zmiennej z inicjalizacją, jeśli tak tlumaczy deklaracje i wypisuje do pliku var.txt 
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(true)|(false)|(".*")|('.')|(-?\ *[1-9]+\.?[0-9]*)\ *;\ *$/) != 0) 
+                {
+                    gsub(" ","",_string)
+                    gsub(";","",_string)
+                    gsub("="," ",_string)
+                    split(_string,_tab," ")
+                    _name = _tab[1]
+                    _value = _tab[2]
+                    _type = zamienzmienna(_keywordname)
+                    if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(match(_value,/^\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)\ *$/) == 0 || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartość." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(_type == "error")
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                        print $0  > file_error 
+                        continue
+                    }
+                    else 
+                    {
+                        if(klucz(_value) == 28 && _type == "Char")
+                        {
+                            gsub("\"","'",_value)
+                            if(length(_value) > 3)
+                            _type = ("array [0.." length(_value) - 2 "] of char")
+                            print _name ":" _type ";" > file_var
+                            split($0,_tab,"=")
+                            _value = _tab[2]
+                            gsub("\"","'",_value)
+                            sub(";","",_value)
+                            sub(/\ */, "", _value)
+                        }
+                        print _name ":= " _value ";" > file_main 
+                    }
+                }  
+                continue
+            }
+            continue
+        }
+
+        #poszukuje instrukcji, które mogą być wykonane w funkcji main
+        if(_main > 0 && _keyword > 0 && _keyword < 35)
+        {
+            #sprawdza czy w funkcji nie znaleziono drugiej funkcji main
+            if(_keyword == 15)
+            {
+                print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                print $0 > file_error
+                print "W programie może istnieć tylko 1 funkcja główna.\n" > file_error
+                break
+            }
+
+            #sprawdza czy po funkcji main, znajduje sie nawias otwierajacy blok kodu
+            if(_main == 1 && _keyword == 33)
+            {
+                _main = 2
+                _curly_brackets++
+                continue
+            }
+
+            #jesli brakuje nawiasu przerywa tlumaczenie i wypisuje blad
+            if(_main < 2)
+            {
+                print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                print $0 > file_error
+                print "Brak nawiasu otwierającego funkcję glówną!!\n" > file_error
+                break
+            }
+
+            #obsługa nawiasów otwierających
+            if(_keyword == 33)
+            {   
+                if(_inproc == 2)
+                {
+                    print "begin" > file_main
+                    _if[_curly_brackets]="if"
+                    _curly_brackets++
+                    _inproc=3
+                    continue
+                }
+                _inproc=0
+                _curly_brackets++
+                print "begin" > file_main
+                continue
+            }
+
+            #obsługa nawiasów zamykających
+            if(_keyword == 34)
+            {
+                if(_inproc == 1 || _inproc == 2)
+                {
+                    _inproc=0
+                    print "Nie mogę przetłumaczyć lini" , line ". Nawias zamykający nie może znajdować się bezpośrednio po instrukcji sterującej/warunowej!" > file_error
+                    print $0 > file_error
+                    continue
+                } 
+                _curly_brackets--
+                if(_inproc == 3 && _if[_curly_brackets] == "if" && _curly_brackets > 1)
+                {
+                    print "end else" > file_main
+                    _inproc = 1
+                    continue
+                }
+                if(_curly_brackets >= 0 && _if[_curly_brackets] != "if")
+                {
+                    _inproc=0
+                    print "end;" > file_main
+                    continue
+                }
+                if(_curly_brackets == 0)
+                {
+                    while((getline < file_c) == 1) 
+                    {
+                        line++
+                        if(length($0) == 0) {continue}
+                        print "Nie mogę przetłumaczyć lini" , line ". Znajduje się poniżej funkcji main!" > file_error
+                        print $0 > file_error
+                    }
+                    break
+                }
+                continue
+            }
+
+            #obsługa instrukcji if
+            if(match($0,/^\ *if\ *\(\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)(\ *(<|<\ *=|>|>\ *=|=\ *=|!=|&\ *&|!|\|\ *\|)\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)\ *)*\)\ *$/) != 0)
+            {
+                _string = $0
+                gsub(/<|<\ *=|>|>\ *=|=\ *=|!=|&\ *&|!|\|\ *\||\\ */, " ", _string)
+                _size=split(_string,_tab," ")
+                _type = _size
+
+                while(_type > 0 && _type != "error")
+                {
+                    if(match(_tab[_type],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartosc." > file_error
+                        print $0  > file_error
+                        _type = "error"    
+                    }
+                    _type--
+                }
+                _string = $0
+                sub(/\ *if\ *\(/, "", _string)
+                sub(/\)/, "", _string)
+                gsub(/\ *&\ *&\ */," and ", _string)
+                gsub(/\ *\|\ *\|\ */," or ", _string)
+                gsub(/\ *=\ *=\ */," = ", _string)
+                gsub(/\ *!\ */," not ", _string)
+                gsub(/\ *>\ *=\ */," >= ", _string)
+                gsub(/\ *<\ *=\ */," <= ", _string)
+                gsub(/\ *< */,"<", _string)
+                gsub(/\ *> */,">", _string)
+                print "if " _string " then " > file_main
+                _inproc=2
+                continue
+            }
+
+            #obsługa else
+            if(match($0,/^\ *else\ *$/) != 0)
+            {
+                if(_inproc == 3)
+                {
+                    print "end else" > file_main
+                    continue
+                }  
+                if(_if[_curly_brackets] == "if")
+                {
+                    _if[_curly_brackets] = ""                 
+                    print "end else" > file_main
+                    continue  
+                }
+            }
+
+            #obsluga petli while
+            if(match($0,/^\ *while\ *\(\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)(\ *(<|<\ *=|>|>\ *=|=\ *=|!\ *=|&\ *&|!|\|\ *\|)\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)\ *)*\)\ *$/) != 0)
+            {
+                _string = $0
+                sub(/\ *while\ *\(/, "", _string)
+                sub(/\)/, "", _string)
+                gsub(/<|<\ *=|>|>\ *=|=\ *=|!=|&\ *&|!|\(|\)|\|\ *\||\\ */, " ", _string)
+                _size=split(_string,_tab," ")
+                _type = _size
+
+                while(_type > 0 && _type != "error")
+                {
+                    if(match(_tab[_type],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartosc." > file_error
+                        print $0  > file_error
+                        _type = "error"    
+                    }
+                    _type--
+                }
+                _string = $0
+                sub(/\ *while\ *\(/, "", _string)
+                sub(/\)/, "", _string)
+                gsub(/\ *&\ *&\ */," and ", _string)
+                gsub(/\ *\|\ *\|\ */," or ", _string)
+                gsub(/\ *=\ *=\ */," = ", _string)
+                gsub(/\ *!\ */," not ", _string)
+                gsub(/\ *>\ *=\ */," >= ", _string)
+                gsub(/\ *<\ *=\ */," <= ", _string)
+                gsub(/\ *< */,"<", _string)
+                gsub(/\ *> */,">", _string)
+                print "while " _string " do " > file_main
+                _inproc=1
+                continue
+            }
+
+            #obsługa pętli for
+            if(match($0, /^\ *for\ *\(\ *[a-zA-Z_0-9]+\ *=\ *-?\ *[0-9]+\ *;\ *-?\ *[a-zA-Z_0-9]+\ *(<|<\ *=|>|>\ *=)\ *-?\ *[a-zA-Z_0-9]+\ *;\ *((\+\ *\+\ *)|(\ *-\ *-\ *)[a-zA-Z_0-9]+)|([a-zA-Z_0-9]+(\+\ *\+\ *)|(\ *-\ *-\ *))\ *\)\ *$/) != 0)
+            {
+                _string = $0
+                gsub(" ","",_string)
+                gsub("for","",_string)
+                gsub("\(","",_string)
+                gsub("\)","",_string)
+                split(_string,_tab,";")
+                if(match(_tab[1], /[a-zA-Z_]+[a-zA-Z_0-9]*=-?[1-9]+[0-9]*/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error                   
+                    continue
+                }
+                if(match(_tab[2], /^-?[1-9]+[0-9]*(<|<=|>|>=)[a-zA-Z_]+[a-zA-Z_0-9]*|[a-zA-Z_]+[a-zA-Z_0-9]*(<|<=|>|>=)-?[1-9]+[0-9]*$/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error                   
+                    continue
+                }
+
+                if(match(_tab[3],/\+/) != 0)
+                    _type="to"
+                else    
+                    _type="downto"
+                gsub(/\ +|-/,"",_tab[3])
+                if(match(_tab[3],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error                   
+                    continue
+                }
+
+                if(match(_tab[1],_tab[3]) == 0 || match(_tab[2],_tab[3]) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error                   
+                    continue
+                }
+ 
+                gsub(/=/,":=",_tab[1])
+                _name = _tab[1]
+                sub(/.*:=/,"",_tab[1])
+                gsub(":=","",_tab[1])
+                _value=_tab[1]
+
+                if(match(_tab[2],/^[1-9]/) != 0)
+                {
+                    gsub(">","<",_tab[2])
+                    gsub(">=","<=",_tab[2])
+                    gsub("<",">",_tab[2])
+                    gsub("<=",">=",_tab[2])
+                }
+                _string=_tab[2]
+                gsub(/<|<=|>|>=/,"",_tab[2])
+                gsub(/[a-zA-Z_]/,"",_tab[2])
+
+                if(_type == "to" && match(_string, /<\ *[^=]/) != 0)
+                {
+                _tab[2]--
+                }
+                if(_type == "to" && match(_string, />\ *[^=]/) != 0)
+                {
+                _tab[2]++
+                }
+                if(_type == "downto" && match(_string, /<\ *[^=]/) != 0)
+                {
+                _tab[2]++
+                }
+                if(_type == "downto" && match(_string, />\ *[^=]/) != 0)
+                {
+                _tab[2]++
+                }
+
+                _inproc=1
+                print "for " _name " " _type " " _tab[2] " do" > file_main
+                continue
+            }
+
+            #obsługa return
+            if(match($0,/^\ *return\ +0\ *;\ *$/) != 0)
+            {
+                _inproc=0
+                print "exit;" > file_main
+                continue
+            }
+
+            #obsługa inkrementacji i dekrementacji
+            if(_keyword == 31 || _keyword == 32)
+            {
+                _name=$0
+                gsub(" ", "", _name)
+                gsub("", "", _name)
+                gsub(/\+/, "", _name)
+                gsub("-", "", _name)
+                gsub(";", "", _name)
+                if(match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error  
+                    continue  
+                } 
+                gsub(" ", "", $0)
+                gsub(";", "", _name)
+                if(match($0,/\+/) !=0)
+                    print "inc(" _name ");" > file_main
+                else
+                    print "dec(" _name ");" > file_main
+                if(_inproc == 2)
+                {
+                    _inproc = 3
+                    continue
+                }
+                _inproc = 0
+                continue
+            }
+            
+            #obsluga wyrazen
+            if(match($0,/^\ *[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(".*"|'.')\ *;\ *$/) != 0 || match($0,/^\ *[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(true|false|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)(\ *(\+|-|\*|\/)\ *((true|false|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)))*\ *;\ *$/) != 0)
+            {
+                _string = $0
+                gsub(";","",_string)
+                _size = split($0,_tab,/=|\*|\/|(--?)|(\+\+?)/)
+                _type = _size
+
+                if(klucz(match(_tab[1],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)/) != 0))
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error    
+                } 
+                while(_type > 1 && _type != "error")
+                {
+                    if(match(_tab[_type],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa argumentu." > file_error
+                        print $0  > file_error
+                        _type = "error"    
+                    }
+                    _type--
+                }
+                if(_type == "error") {break}
+
+                gsub(/\ *=/,":=",_string)
+                gsub("\"","'",_string)
+                gsub(/\ +/," ",_string)
+                print _string ";" > file_main
+                if(_inproc == 2)
+                {
+                    _inproc = 3
+                    continue
+                }
+                _inproc = 0
+                continue
+            }
+
+            #sprawdza, których instukcji nie można wykonywać w funkcji main
+            if(_keyword == 10 || _keyword == 11 || _keyword == 13 || _keyword == 14)
+            {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+            }
+
+            #tlumaczy instrukcje break oraz continue
+            if(_keyword == 24 || _keyword == 25)
+            {
+                gsub(" ", "", $0)
+                if(match($0,/^\ *(break)|(continue)\ *;\ *$/) != 0)
+                {
+                    if(_curly_brackets < 2)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                        print "Instrukcji " _keywordname " można użyć tylko w pętli.", "\n" > file_error
+                        continue
+                    }
+                    print _keywordname ";" > file_main
+                    if(_inproc == 2)
+                    {
+                        _inproc = 3
+                        continue
+                    }
+                    _inproc = 0
+                    continue
+                }                
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+            }
+
+            #tlumaczy instrukcje printf
+            if(_keyword == 26)
+            {
+                if(match($0,/^\ *printf\ *\(\ *".*"(\ *,\ *(true|false|-?\ *[1-9]+\.?[0-9]*|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*))*\ *\)\ *;\ *$/) != 0)
+                {
+                    _string =$0
+                    sub("printf","",_string)
+                    sub("\(","",_string)
+                    sub("\)","",_string)
+                    sub(";","",_string)
+                    _size = split(_string,_tab,",")
+                    _type = _size
+                    _string = _tab[1]
+                    while(_type > 0 && _type != "error")
+                    {
+                        if(klucz(_tab[_type]) > 0 && klucz(_tab[_type]) < 10 && length(_tab[_type]) == length(_keywordname) || match(_tab[_type],/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                        {
+                            print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa argumentu." > file_error
+                            print $0  > file_error
+                            _type = "error"    
+                        }
+                        _type--
+                    }
+                    if(_type == "error") {break}
+                    _type = 2
+                    gsub("\"", "'", _string)
+                    gsub(/\\n/, "', #10, '", _string)
+                    gsub(/%[diouxaefgcs]/, "', %d, '", _string)
+                    while(_type != "error")
+                    {
+                        if(match(_string,/%[^diouxaefgcs]/) != 0)
+                        {
+                            print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony format." > file_error
+                            print $0  > file_error
+                            _type = "error"
+                            break  
+                        }
+                        if(match(_string,/%[diouxaefgcs]/) != 0)
+                        {
+                            if(_type > _size)
+                            {
+                                print "Nie mogę przetłumaczyć lini" , line ". Za mało argumentów." > file_error
+                                print $0  > file_error
+                                _type = "error"
+                                continue  
+                            }
+                            gsub("\"","'", _tab[_type])
+                            sub(/\ */,"", _tab[_type])
+                            sub(/\ *$/,"", _tab[_type])
+                            _tab[_type] = (_tab[_type])
+                            sub(/%[diouxaefgcs]/, _tab[_type],_string)
+                            _type++
+                            continue
+                        }
+                        else
+                        {
+                            if(_type <= _size)
+                            {
+                                print "Nie mogę przetłumaczyć lini" , line ". Za dużo argumentów." > file_error
+                                print $0  > file_error
+                                _type = "error"
+                                break
+                            } 
+                            else    
+                                break
+                        }
+                    }
+
+                    if(_type == "error")
+                        continue
+                    gsub(", ''","",_string)
+                    sub(/^\ */,"",_string)
+                    print "write(" _string ");" > file_main
+                    if(_inproc == 2)
+                    {
+                       _inproc = 3
+                        continue
+                    }
+                    _inproc = 0
+                    continue
+                }
+            }
+            
+            #tlumaczy instrukcje scanf
+            if(_keyword == 27)
+            {
+                if(match($0,/^\ *scanf\ *\(\ *"%."\ *,\ *&\ *[a-zA-Z_]+[a-zA-Z_0-9]*\ *\)\ *;\ *$/) != 0)
+                {
+                    if(match($0,/%[^diouxaefgcs]/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony format." > file_error
+                        print $0  > file_error
+                        continue 
+                    }
+
+                    sub("scanf","",$0)
+                    sub("\(", "", $0)
+                    sub("\)", "", $0)
+                    sub(";", "", $0)
+                    sub(",", "", $0)
+                    sub("&", "", $0)
+                    sub(/".*"/, "", $0)
+                    sub(" ", "", $0)
+
+                    if(klucz($0) != 30 && length($0) == length(_keywordname) && match($0,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa argumentu." > file_error
+                        print $0  > file_error
+                        continue    
+                    }
+                    print "read(" $0 ");" > file_main
+                    if(_inproc == 2)
+                    {
+                        _inproc = 3
+                        continue
+                    }
+                    _inproc = 0
+                    continue
+                }
+            }
+
+            #sprawdza i tłumaczy inicjalizacje stalych
+            if(_keyword == 12)
+            {       
+                if(match($0,/^\ *const\ +/) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                
+                _string = substr($0, match($0, "const") + length("const"))
+
+                if(klucz(_string) < 1 || klucz(_string) > 9)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                    print $0  > file_error
+                    continue
+                }
+
+                _string = substr($0, match($0, _keywordname) + length(_keywordname))
+
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(true)|(false)|(".*")|('.')|(-?\ *[1-9]+\.?[0-9]*)\ *;\ */) == 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line "." > file_error
+                    print $0  > file_error
+                    continue
+                }
+
+                gsub(";","", _string)
+                gsub(" ", "",  _string)
+                gsub("="," ", _string)
+                split(_string,_tab," ")
+                _name = _tab[1]
+                _value = _tab[2]
+
+                if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                    print $0  > file_error
+                    continue
+                }
+
+                if(match(_value,/^\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)\ *$/) == 0 || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                {
+                    print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartość." > file_error
+                    print $0  > file_error
+                    continue
+                }
+                gsub("\"","'",_value)
+                print _name "= " _value ";" > file_const
+                if(_inproc == 2)
+                {
+                    _inproc = 3
+                    continue
+                }
+                _inproc = 0
+                continue
+            }
+
+            #poszukuje deklaracji zmiennych, lub deklaracji z inicjalizacją
+            if(_keyword > 0 && _keyword < 10)
+            {
+                #zwraca łancuch tekstowy za slowem kluczowym
+                _string = substr($0,length(_keywordname) + 1)
+                
+                #sprawdza czy jest to deklaracja zmiennej, jeśli tak tlumaczy deklaracje i wypisuje do pliku var.txt
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *;\ *$/) != 0) 
+                {
+                    gsub(" ","",_string)
+                    gsub(";","",_string)
+                    _name = _string
+                    _type = zamienzmienna(_keywordname)
+                    if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(_type == "error")
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                        print $0  > file_error 
+                        continue
+                    }
+                    else 
+                    {
+                        print _name ":" _type ";" > file_var
+                        if(_inproc == 2)
+                        {
+                            _inproc = 3
+                            continue
+                        }
+                        _inproc = 0
+                        continue
+                    } 
+                }  
+            
+                #sprawdza czy jest to deklaracja zmiennej z inicjalizacją, jeśli tak tlumaczy deklaracje i wypisuje do pliku var.txt
+                if(match(_string,/^\ +[a-zA-Z_]+[a-zA-Z_0-9]*\ *=\ *(true)|(false)|(".*")|('.')|(-?\ *[1-9]+\.?[0-9]*)\ *;\ *$/) != 0) 
+                {
+                    gsub(" ","",_string)
+                    gsub(";","",_string)
+                    gsub("="," ",_string)
+                    split(_string,_tab," ")
+                    _name = _tab[1]
+                    _value = _tab[2]
+                    _type = zamienzmienna(_keywordname)
+                    if(klucz(_name) != 30 && length(_name) == length(_keywordname) || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ */) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona nazwa zmiennej." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(match(_value,/^\ *(true|false|".*"|'.'|[a-zA-Z_]+[a-zA-Z_0-9]*|-?[1-9]+\.?[0-9]*)\ *$/) == 0 || match(_name,/^\ *(char|short|int|long|long\ +long|float|double|long\ +double|bool|void|struct|return|continue|break|if|else|do|for|while|switch|case|bool|const|main|printf|scanf|auto)\ *$/) != 0)
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolona wartość." > file_error
+                        print $0  > file_error
+                        continue
+                    }
+                    if(_type == "error")
+                    {
+                        print "Nie mogę przetłumaczyć lini" , line ". Niedozwolony typ zmiennej." > file_error
+                        print $0  > file_error 
+                        continue
+                    }
+                    else 
+                    {
+                        if(klucz(_value) == 28 && _type == "Char")
+                        {
+                            gsub("\"","'",_value)
+                            if(length(_value) > 3)
+                                _type = ("array [0.." length(_value) - 2 "] of char")
+                            split($0,_tab,"=")
+                            _value = _tab[2]
+                            gsub("\"","'",_value)
+                            sub(";","",_value)
+                            sub(/\ */, "", _value)    
+                        }
+                        print _name ":" _type ";" > file_var
+                        print _name ":= " _value ";" > file_main 
+                        if(_inproc == 2)
+                        {
+                            _inproc = 3
+                            continue
+                        }
+                        _inproc = 0
+                        continue
+                    }
+                }  
+                
+            }              
+            print "Nie mogę przetłumaczyć lini" , line "." > file_error
+            print $0  > file_error
+            continue
+        }
+
+        #wpisuje błędne linie, lub instrukcje, które nie mogą znaleźć się poza funkcją main
+        if(_main == 0 && _keyword > 16 || _keyword == 0)
+        {
+            print "Nie mogę przetłumaczyć lini" , line "." > file_error
+            print $0 > file_error
+            continue
+        }
+    }
+}
+
+END {
+    if(error_argument == 1)
+    {
+        print "BLAD PROGRAMU!!"
+        if(ARGV[2] == "")
+        {
+            print "Nie podano nazwy pliku wyjsciowego"
+            if(ARGV[1] == "")
+            {
+                print "Nie podano nazwy pliku wejsciowego"
+            }
+        }
+        else if(ARGV[1] == ARGV[2])
+        {
+            print "Nazwy pliku wejsciowego i wyjsciowego nie moga byc takie same."
+        }
+    }
+    else
+    {
+        #jeśli w programie jest za dużo nawiasów {domykających} dopisuje błąd
+        if(_curly_brackets > 0)
+            print "W programie jest o " _curly_brackets " za dużo nawiasów otwierających {!" > file_error
+
+        #zamykam pliki by czytać je od 1 rekordu
+        close(file_const)
+        close(file_var)
+        close(file_main)
+        close(file_error)
+
+        #łącze pliki, aby kolejność przetłumaczonych instrukcji zgadzała się z językiem pascal
+        print "program Tlumaczenie;" > file_pascal
+        print "\nconst" > file_pascal
+        while ((getline < file_const) == 1) {print $0 > file_pascal}
+        print "\nvar" > file_pascal
+        while ((getline < file_var) == 1) {print $0 > file_pascal}
+        print "\nBegin" > file_pascal
+        while ((getline < file_main) == 1) {print $0 > file_pascal}
+        print "End." > file_pascal
+
+        #zamykam pliki by czytać je od 1 rekordu
+        close(file_c)
+        close(file_pascal)
+        close(file_error)
+
+        #wyświetlam informację końcowe
+        printf "PLIK WEJŚCIOWY: " ARGV[1] 
+        printf "\nPLIk WYJŚCIOWY: " ARGV[2]
+        printf "\n\nPRZETŁUMACZONO PROGRAM W JĘZYKU C NA PROGRAM W JĘZYKU PASCAL\n\n"
+        
+        printf "PROGRAM W JEZYKU C:\n"
+        while ((getline < file_c) == 1) {print $0}
+        
+        printf "\nPROGRAM W JEZYKU PASCAL:\n"
+        while ((getline < file_pascal) == 1) {print $0}
+        
+        printf "\nBŁĘDY W TŁUMACZENIU:\n"
+        while ((getline < file_error) == 1) {print $0}
+
+        #usuwa niepotrzebne pliki pomocnicze
+        system("rm -r const.txt")
+        system("rm -r error.txt")
+        system("rm -r main.txt")
+        system("rm -r var.txt")
+    }
+}
